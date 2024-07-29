@@ -29,6 +29,7 @@ xlsx_files = [
 
 for site_number, file in enumerate(xlsx_files, 1):
     print(f"Processing file: {file}")
+    file = "datasets/" + file
     # Data import
     data = pd.read_excel(file)
 
