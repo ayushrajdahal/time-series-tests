@@ -160,7 +160,7 @@ for site_number, file in enumerate(xlsx_files, 1):
     print(f" R2 Score: {r2}")
 
     # Save results to file
-    results_file = "wind_n24_lstm_pytorch.txt"
+    results_file = "outputs/wind_n24_lstm_pytorch.txt"
     with open(results_file, "a") as file:
         file.write(f"Site {site_number}:\n")
         file.write(f"RMSE: {rmse}\n")
