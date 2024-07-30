@@ -6,7 +6,7 @@ from tensorflow.keras import initializers
 from tensorflow.keras import regularizers
 from tensorflow.keras.layers import InputSpec, Layer, RNN
 
-from kan import KANLayer
+from kan import KANLinear
 
 class DropoutRNNCell:
     """Direct copy of the keras class (https://github.com/keras-team/keras/blob/v3.3.3/keras/src/layers/rnn/dropout_rnn_cell.py)
@@ -200,11 +200,11 @@ class TKANCell(Layer, DropoutRNNCell):
 
         for act in self.tkan_activations:
             if act is None:
-                self.tkan_sub_layers.append(KANLayer(self.sub_kan_output_dim, use_layernorm=True))  
+                self.tkan_sub_layers.append(KANLinear(self.sub_kan_output_dim, use_layernorm=True))  
             elif isinstance(act, (int, float)):
-                self.tkan_sub_layers.append(KANLayer(self.sub_kan_output_dim, spline_order=act, use_layernorm=True))
+                self.tkan_sub_layers.append(KANLinear(self.sub_kan_output_dim, spline_order=act, use_layernorm=True))
             elif isinstance(act, dict):
-                self.tkan_sub_layers.append(KANLayer(self.sub_kan_output_dim, **act, use_layernorm=True))
+                self.tkan_sub_layers.append(KANLinear(self.sub_kan_output_dim, **act, use_layernorm=True))
             else:
                 self.tkan_sub_layers.append(tf.keras.layers.Dense(self.sub_kan_output_dim, activation=act))
 
