@@ -17,6 +17,7 @@ from dacite import Config as DaciteConfig
 np.random.seed(42)
 random.seed(42)
 torch.manual_seed(42)
+torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # xLSTM configuration
 xlstm_cfg = """ 
