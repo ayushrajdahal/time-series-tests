@@ -11,7 +11,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
 # Import TSLANet model
-from TSLANet.TSLANet_Forecasting import TSLANet
+from TSLANet_Forecasting import TSLANet
 
 # Set random seeds for reproducibility
 np.random.seed(42)
@@ -37,7 +37,7 @@ xlsx_files = [
 
 # Data import
 for site_number, file_name in enumerate(xlsx_files, 1):
-    data = pd.read_excel("datasets/"+file_name)
+    data = pd.read_excel("../datasets/"+file_name)
 
     # Convert time column to datetime and correct invalid times
     data['Time(year-month-day h:m:s)'] = data['Time(year-month-day h:m:s)'].apply(lambda x: str(x).replace(' 24:', ' 00:'))
@@ -110,7 +110,7 @@ for site_number, file_name in enumerate(xlsx_files, 1):
     print(f" R2 Score: {r2}")
 
     # Save results to file
-    results_file = "outputs/wind_tsla_net.txt"
+    results_file = "../outputs/wind_tsla_net.txt"
     with open(results_file, "a") as file:
         file.write(f"Site {site_number}:\n")
         file.write(f"RMSE: {rmse}\n")

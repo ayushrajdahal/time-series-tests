@@ -61,7 +61,7 @@ def create_sequences(X, y, time_steps=1):
 # Data import and model evaluation
 for site_number in range(1, 7):
     file_name = xlsx_files[site_number - 1]
-    data = pd.read_excel("datasets/"+file_name)
+    data = pd.read_excel("../datasets/"+file_name)
 
     # Convert time column to datetime and correct invalid times
     data['Time(year-month-day h:m:s)'] = data['Time(year-month-day h:m:s)'].apply(lambda x: str(x).replace(' 24:', ' 00:'))
@@ -150,7 +150,7 @@ for site_number in range(1, 7):
     print(f" R2 Score: {r2}")
 
     # Save results to file
-    results_file = "outputs/wind_xlstm.txt"
+    results_file = "../outputs/wind_xlstm.txt"
     with open(results_file, "a") as file:
         file.write(f"Site {site_number}:\n")
         file.write(f"RMSE: {rmse}\n")
