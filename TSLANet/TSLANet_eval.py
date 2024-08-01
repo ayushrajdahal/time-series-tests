@@ -18,6 +18,7 @@ np.random.seed(42)
 random.seed(42)
 torch.manual_seed(42)
 
+# List of dataset files
 xlsx_files = [
     "Solar station site 1 (Nominal capacity-50MW).xlsx",
     "Solar station site 2 (Nominal capacity-130MW).xlsx",
@@ -35,9 +36,8 @@ xlsx_files = [
     "Wind farm site 6 (Nominal capacity-96MW).xlsx",
 ]
 
-# Data import
-for site_number, file_name in enumerate(xlsx_files, 1):
-    data = pd.read_excel("../datasets/"+file_name)
+def preprocess_data(file_name):
+    data = pd.read_excel(f"../datasets/{file_name}")
 
     # Convert time column to datetime and correct invalid times
     data['Time(year-month-day h:m:s)'] = data['Time(year-month-day h:m:s)'].apply(lambda x: str(x).replace(' 24:', ' 00:'))
@@ -57,6 +57,9 @@ for site_number, file_name in enumerate(xlsx_files, 1):
     data_scaled = scaler.fit_transform(data)
     data_scaled = pd.DataFrame(data_scaled, columns=data.columns, index=data.index)
 
+    return data_scaled
+
+def prepare_datasets(data_scaled):
     # Prepare input/output
     X = data_scaled.iloc[:, :-1].values  # All features except the last (target) column
     y = data_scaled.iloc[:, -1].values   # Target column (Power output)
@@ -76,8 +79,11 @@ for site_number, file_name in enumerate(xlsx_files, 1):
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
+    return train_loader, test_loader, y_test
+
+def train_and_evaluate_model(train_loader, test_loader, y_test, input_dim):
     # Initialize TSLANet model
-    model = TSLANet(input_dim=X_train.shape[1], output_dim=1)
+    model = TSLANet(input_dim=input_dim, output_dim=1)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
@@ -104,46 +110,27 @@ for site_number, file_name in enumerate(xlsx_files, 1):
     mae = mean_absolute_error(y_test, predictions)
     r2 = r2_score(y_test, predictions)
 
-    print(file_name)
-    print(f" RMSE: {rmse}")
-    print(f" MAE: {mae}")
-    print(f" R2 Score: {r2}")
+    return rmse, mae, r2, predictions
 
-    # Save results to file
+def main():
     results_file = "../outputs/wind_tsla_net.txt"
-    with open(results_file, "a") as file:
-        file.write(f"Site {site_number}:\n")
-        file.write(f"RMSE: {rmse}\n")
-        file.write(f"MAE: {mae}\n")
-        file.write(f"R2 Score: {r2}\n")
-        file.write("\n")
+    for site_number, file_name in enumerate(xlsx_files, 1):
+        data_scaled = preprocess_data(file_name)
+        train_loader, test_loader, y_test = prepare_datasets(data_scaled)
+        rmse, mae, r2, predictions = train_and_evaluate_model(train_loader, test_loader, y_test, input_dim=data_scaled.shape[1] - 1)
 
-    # # Plotting actual vs predicted
-    # plt.figure(figsize=(10, 6), dpi=300)
-    # plt.plot(y_test[:500], label='Actual Wind Power', linewidth=2)
-    # plt.plot(predictions[:500], label='Predicted Wind Power', linewidth=2)
-    # plt.title('Comparison of Actual and Predicted Wind Power')
-    # plt.xlabel('Time')
-    # plt.ylabel('Wind Power (MW)')
-    # plt.legend()
-    # plt.grid(True, linestyle='--', linewidth=0.5, color='gray', alpha=0.7)
-    # plt.savefig('Actual_vs_Predicted_Wind_Power_TSLANet.png')
-    # plt.show()
+        print(file_name)
+        print(f" RMSE: {rmse}")
+        print(f" MAE: {mae}")
+        print(f" R2 Score: {r2}")
 
-    # # Feature importance analysis
-    # feature_importance = model.feature_importances_
-    # feature_names = X.columns
+        # Save results to file
+        with open(results_file, "a") as file:
+            file.write(f"Site {site_number}:\n")
+            file.write(f"RMSE: {rmse}\n")
+            file.write(f"MAE: {mae}\n")
+            file.write(f"R2 Score: {r2}\n")
+            file.write("\n")
 
-    # plt.figure(figsize=(10, 6), dpi=300)
-    # plt.bar(feature_names, feature_importance)
-    # plt.ylabel('Feature Importance', fontsize=12, fontweight='bold')
-    # plt.xticks(rotation=45, fontsize=12, fontweight='bold', ha='right')
-    # plt.yticks(fontsize=12, fontweight='bold')
-    # plt.tight_layout()
-    # ax = plt.gca()
-    # ax.spines['bottom'].set_linewidth(2)
-    # ax.spines['left'].set_linewidth(2)
-    # ax.spines['top'].set_linewidth(2)
-    # ax.spines['right'].set_linewidth(2)
-    # plt.savefig('Feature_Importance_TSLANet.png')
-    # plt.show()
+if __name__ == "__main__":
+    main()
