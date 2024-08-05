@@ -19,19 +19,26 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 xlsx_files = [
+    "Solar station site 1 (Nominal capacity-50MW).xlsx",
+    "Solar station site 2 (Nominal capacity-130MW).xlsx",
+    "Solar station site 3 (Nominal capacity-30MW).xlsx",
+    "Solar station site 4 (Nominal capacity-130MW).xlsx",
+    "Solar station site 5 (Nominal capacity-110MW).xlsx",
+    "Solar station site 6 (Nominal capacity-35MW).xlsx",
+    "Solar station site 7 (Nominal capacity-30MW).xlsx",
+    "Solar station site 8 (Nominal capacity-30MW).xlsx",
     "Wind farm site 1 (Nominal capacity-99MW).xlsx",
     "Wind farm site 2 (Nominal capacity-200MW).xlsx",
     "Wind farm site 3 (Nominal capacity-99MW).xlsx",
     "Wind farm site 4 (Nominal capacity-66MW).xlsx",
     "Wind farm site 5 (Nominal capacity-36MW).xlsx",
-    "Wind farm site 6 (Nominal capacity-96MW).xlsx"
+    "Wind farm site 6 (Nominal capacity-96MW).xlsx",
 ]
 
 for site_number, file in enumerate(xlsx_files, 1):
     print(f"Processing file: {file}")
-    file = "../datasets/" + file
     # Data import
-    data = pd.read_excel(file)
+    data = pd.read_excel("../datasets/" + file)
 
     # Convert time column to datetime and correct invalid times
     data['Time(year-month-day h:m:s)'] = data['Time(year-month-day h:m:s)'].apply(lambda x: str(x).replace(' 24:', ' 00:'))
@@ -154,19 +161,19 @@ for site_number, file in enumerate(xlsx_files, 1):
     mae = mean_absolute_error(y_test.cpu().numpy(), predictions)
     r2 = r2_score(y_test.cpu().numpy(), predictions)
 
-    print(f"Site {site_number}:")
+    print(f"{file}:")
     print(f" RMSE: {rmse}")
     print(f" MAE: {mae}")
     print(f" R2 Score: {r2}")
 
     # Save results to file
     results_file = "../outputs/wind_n24_lstm_pytorch.txt"
-    with open(results_file, "a") as file:
-        file.write(f"Site {site_number}:\n")
-        file.write(f"RMSE: {rmse}\n")
-        file.write(f"MAE: {mae}\n")
-        file.write(f"R2 Score: {r2}\n")
-        file.write("\n")
+    with open(results_file, "a") as file_:
+        file_.write(f"{file.split(".xlsx")[0]}:\n")
+        file_.write(f"RMSE: {rmse}\n")
+        file_.write(f"MAE: {mae}\n")
+        file_.write(f"R2 Score: {r2}\n")
+        file_.write("\n")
 
     # # Plotting actual vs predicted
     # plt.figure(figsize=(10, 6), dpi=300)
