@@ -8,8 +8,10 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from XLSTM_custom import XLSTM_Attention_Model
+from XLSTM_original import xLSTM
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
 
 # Function to create sequences for time series data
 def create_sequences(data, n_steps):
@@ -55,10 +57,10 @@ for site_number, file_name in enumerate(xlsx_files, 1):
     y_train, y_test = y[:train_size], y[train_size:]
     
     # Convert data to PyTorch tensors
-    X_train_tensor = torch.tensor(X_train, dtype=torch.float64)
-    y_train_tensor = torch.tensor(y_train, dtype=torch.float64)
-    X_test_tensor = torch.tensor(X_test, dtype=torch.float64)
-    y_test_tensor = torch.tensor(y_test, dtype=torch.float64)
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float64).to(device)
+    y_train_tensor = torch.tensor(y_train, dtype=torch.float64).to(device)
+    X_test_tensor = torch.tensor(X_test, dtype=torch.float64).to(device)
+    y_test_tensor = torch.tensor(y_test, dtype=torch.float64).to(device)
     
     train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
     test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
@@ -104,7 +106,7 @@ for site_number, file_name in enumerate(xlsx_files, 1):
     rmse = np.sqrt(mean_squared_error(true_values, predictions))
     mae = mean_absolute_error(true_values, predictions)
     r2 = r2_score(true_values, predictions)
-    
+    print(f"{file_name}:")
     print(f"RMSE: {rmse}")
     print(f"MAE: {mae}")
     print(f"R2 Score: {r2}")
@@ -119,12 +121,12 @@ for site_number, file_name in enumerate(xlsx_files, 1):
         file.write("\n")
     
     # Plot predictions vs true values
-    plt.figure(figsize=(12, 6))
-    plt.plot(true_values, label='True Values')
-    plt.plot(predictions, label='Predictions')
-    plt.title(f'Solar Power Forecasting - Site {site_number}')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Normalized Power Output')
-    plt.legend()
-    plt.savefig(f'../outputs/solar_forecast_site_{site_number}.png')
+    # plt.figure(figsize=(12, 6))
+    # plt.plot(true_values, label='True Values')
+    # plt.plot(predictions, label='Predictions')
+    # plt.title(f'Solar Power Forecasting - Site {site_number}')
+    # plt.xlabel('Time Steps')
+    # plt.ylabel('Normalized Power Output')
+    # plt.legend()
+    # plt.savefig(f'../outputs/figures/solar_forecast_site_{site_number}.png')
     # plt.show()
