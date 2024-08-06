@@ -63,3 +63,7 @@ Wind farm site 5 (Nominal capacity-36MW):
  MAE: 0.052297214525923945
  R2 Score: 0.8890402629798689
 
+Wind farm site 6 (Nominal capacity-96MW):
+ RMSE: 0.14897216856479645
+ MAE: 0.10460114479064941
+ R2 Score: 0.7191383838653564
