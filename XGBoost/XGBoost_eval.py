@@ -7,6 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
+import re
 
 # Set random seeds for reproducibility
 np.random.seed(42)
@@ -31,11 +32,28 @@ xlsx_files = [
 
 # Data import
 for site_number, file_name in enumerate(xlsx_files, 1):
+
+    # Extract nominal capacity using regular expression pattern from the file name
+    match = re.search(r"Nominal capacity-(\d+)MW", file_name)
+    if match:
+        nominal_capacity = int(match.group(1))
+        print(f"Nominal capacity: {nominal_capacity} MW")
+    else:
+        print("Nominal capacity not found")
+
+
     data = pd.read_excel("../datasets/"+file_name)
 
     # Convert time column to datetime and correct invalid times
     data['Time(year-month-day h:m:s)'] = data['Time(year-month-day h:m:s)'].apply(lambda x: str(x).replace(' 24:', ' 00:'))
     data['Time(year-month-day h:m:s)'] = pd.to_datetime(data['Time(year-month-day h:m:s)'], format='%Y-%m-%d %H:%M:%S')
+
+
+    # Extract month-day data and convert to integer day value
+    data['DayOfYear'] = data['Time(year-month-day h:m:s)'].dt.dayofyear
+
+    # Convert time to fractional hour data
+    data['FractionalHour'] = data['Time(year-month-day h:m:s)'].dt.hour + data['Time(year-month-day h:m:s)'].dt.minute / 60.0
 
     # Set time column as index
     data.set_index('Time(year-month-day h:m:s)', inplace=True)
@@ -48,19 +66,25 @@ for site_number, file_name in enumerate(xlsx_files, 1):
 
     # Normalize the features
     scaler = MinMaxScaler()
-    data_scaled = scaler.fit_transform(data)
-    data_scaled = pd.DataFrame(data_scaled, columns=data.columns, index=data.index)
+    data_scaled = scaler.fit_transform(data.iloc[:, :-1])
+    data_scaled = pd.DataFrame(data_scaled, columns=data.columns[:-1], index=data.index)
+
+    # Add the target column to the scaled data w/o normalizing
+
+    data_scaled['Power (MW)'] = data['Power (MW)']
 
     # Prepare input/output
     X = data_scaled.iloc[:, :-1]  # All features except the last (target) column
     y = data_scaled.iloc[:, -1]   # Target column (Power output)
+    y = y / nominal_capacity
 
-    # Splitting data into training and testing sets (80-20 split)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Splitting data into training, validation, and testing sets (70-15-15 split)
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
     # Create and train XGBoost model
     model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, random_state=42)
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=True)
 
     # Predictions
     predictions = model.predict(X_test)
